@@ -28,8 +28,9 @@ def settingsMenu(currentSettings):
     sg.theme("DarkGrey2")
     layout = [
         [sg.Text("Minecraft Server Finder Settings", font=("Arial", 20))],
-        [sg.Text("Starter IP: "), sg.InputText(currentSettings["startIP"], key="starterIPBox")],
-        [sg.Text("End IP: "), sg.InputText(currentSettings["endIP"], key="endIPBox")],
+        [sg.Text("Starter IP: "), sg.InputText(currentSettings["startIP"], key="starterIPBox", size=(46, 1))],
+        [sg.Text("End IP: "), sg.InputText(currentSettings["endIP"], key="endIPBox", size=(48, 1))],
+        [sg.Text("Max Allowed Threads: "), sg.InputText(currentSettings["maxThreads"], key="maxThreadsBox", size=(10, 1))],
         [sg.Button("Submit", size=(50, 1))],
     ]
     window = sg.Window("Minecraft Server Finder Settings", layout=layout)
@@ -42,8 +43,11 @@ def settingsMenu(currentSettings):
     
         if event == "Submit":
             window.close()
-            return {
-                'startIP': values["starterIPBox"],
-                'endIP': values["endIPBox"],
-            }
-
+            if int(values["maxThreadsBox"]) <= 1:
+                sg.popup_error("Your max threads must be greator than or equal to 1")
+            else:
+                return {
+                    'startIP': values["starterIPBox"],
+                    'endIP': values["endIPBox"],
+                    'maxThreads': values["maxThreadsBox"],
+                }

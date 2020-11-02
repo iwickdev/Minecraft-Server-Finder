@@ -2,7 +2,7 @@ import threading
 import PySimpleGUI as sg
 from utils import checkServer, incrementIP, settingsMenu
 
-settings = {'startIP': '1.1.1.1', 'endIP': '255.255.255.255'}
+settings = {'startIP': '1.1.1.1', 'endIP': '255.255.255.255', 'maxThreads': '500'}
 
 global updateScreen
 updateScreen = False
@@ -71,13 +71,21 @@ while True:
             window["Pause"].Update(disabled=True)
             window["Stop"].Update(disabled=True)
             window["Settings"].Update(disabled=False)
+    
+    if paused:
+        window["statusText"].Update("Status: Paused..." + ipA + " | Active Threads: " + str(threading.active_count()-1))
+    
+    if updateScreen:
+        window["validDisplay"].Update("\n".join(validServers))
+        updateScreen = False
 
     if searchActive:
         try:
-            ipATMP = incrementIP(ipA)
-            window["statusText"].Update("Status: Searching... " + ipA + " | Active Threads: " + str(threading.active_count()-1))
-            threading.Thread(target=checkThread, args=(ipA,)).start()
-            ipA = ipATMP
+            if threading.active_count()-1 < int(settings["maxThreads"])+1:
+                ipATMP = incrementIP(ipA)
+                window["statusText"].Update("Status: Searching... " + ipA + " | Active Threads: " + str(threading.active_count()-1))
+                threading.Thread(target=checkThread, args=(ipA,)).start()
+                ipA = ipATMP
         except RuntimeError:
             pass
 
@@ -89,10 +97,3 @@ while True:
             window["Pause"].Update(disabled=True)
             window["Stop"].Update(disabled=True)
             window["Settings"].Update(disabled=False)
-    
-    if paused:
-        window["statusText"].Update("Status: Paused..." + ipA + " | Active Threads: " + str(threading.active_count()-1))
-    
-    if updateScreen:
-        window["validDisplay"].Update("\n".join(validServers))
-        updateScreen = False
