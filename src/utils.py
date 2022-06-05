@@ -1,10 +1,19 @@
+from mcstatus import JavaServer
+
+class FoundInstance:
+    def __init__(self, IP, MOTD, VERSION):
+        self.IP = IP
+        self.MOTD = MOTD
+        self.VERSION = VERSION
+
 def checkServer(serverIP, port=25565):
-    from mcstatus import MinecraftServer
     try:
-        MinecraftServer.lookup(f"{serverIP}:{port}").ping()
-        return True
+        s = JavaServer.lookup(f"{serverIP}:{port}")
+        st = s.status()
+        inst = FoundInstance(f"{serverIP}:{port}", st.description, st.version)
+        return True, inst
     except:
-        return False
+        return False, None
 
 def incrementIP(ip):
     if ip == "255.255.255.255":

@@ -1,6 +1,10 @@
+import os
+import random
+import datetime
 import threading
+from typing import List
 import PySimpleGUI as sg
-from utils import checkServer, incrementIP, settingsMenu
+from utils import FoundInstance, checkServer, incrementIP, settingsMenu
 
 settings = {'startIP': '1.1.1.1', 'endIP': '255.255.255.255', 'maxThreads': '500'}
 
@@ -8,13 +12,19 @@ global updateScreen
 updateScreen = False
 global validServers
 validServers = []
+global formattedServers
+formattedServers: List[FoundInstance] = []
 
 def checkThread(ipA):
     global validServers
     global updateScreen
+    global formattedServers
 
-    if checkServer(ipA):
+    status, instance = checkServer(ipA)
+
+    if status:
         validServers.append(ipA)
+        formattedServers.append(instance)
         updateScreen = True
 
 sg.theme("DarkGrey2")
@@ -25,6 +35,7 @@ layout = [
     [sg.Button("Pause", size=(46, 1), disabled=True)],
     [sg.Button("Stop", size=(46, 1), disabled=True)],
     [sg.Button("Settings", size=(46, 1))],
+    [sg.Button("Export", size=(46, 1))],
     [sg.Text("Status: Idle", size=(48, 1), key="statusText")],
 ]
 window = sg.Window("Minecraft Server Finder", layout=layout)
@@ -46,6 +57,7 @@ while True:
         if not paused:
             ipA = settings["startIP"]
             validServers = []
+            formattedServers = []
         searchActive = True
         paused = False
         window["Start"].Update(disabled=True)
@@ -71,6 +83,22 @@ while True:
             window["Pause"].Update(disabled=True)
             window["Stop"].Update(disabled=True)
             window["Settings"].Update(disabled=False)
+    
+    if event == "Export":
+        if len(formattedServers) == 0:
+            sg.popup_error("No servers found to export", title="No export values")
+            continue
+
+        path = sg.popup_get_folder("Select a export location")
+
+        if not path:
+            sg.popup_error("You must select a location to export", title="Invalid Selection")
+            continue
+        
+        with open(os.path.join(path, f"{datetime.datetime.now().date()}-{random.randint(111111, 999999)}.txt"), "w") as f:
+            for entry in formattedServers:
+                f.write(f"{entry.IP} <> {entry.VERSION.name} {entry.VERSION.protocol}\n")
+                f.write(f"{entry.MOTD}\n\n")
     
     if paused:
         window["statusText"].Update("Status: Paused..." + ipA + " | Active Threads: " + str(threading.active_count()-1))
